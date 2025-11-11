@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- CARGAR HISTORIAL DE RESERVAS (CON MANEJO DE ERRORES MEJORADO) ---
-    fetch('http://localhost:4000/api/clientes/mis-reservas', {
+    fetch('https://hotel-backend-production-ed93.up.railway.app/api/clientes/mis-reservas', {
         headers: {
             'Authorization': `Bearer ${token}`
         }
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             apellido: editApellidoInput.value
         };
 
-        fetch('http://localhost:4000/api/clientes/perfil', {
+        fetch('https://hotel-backend-production-ed93.up.railway.app/api/clientes/perfil', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Si los campos de contraseña tienen texto, intentamos cambiar la contraseña
         if (contrasenaActual && nuevaContrasena) {
-            fetch('http://localhost:4000/api/clientes/cambiar-contrasena', {
+            fetch('https://hotel-backend-production-ed93.up.railway.app/api/clientes/cambiar-contrasena', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

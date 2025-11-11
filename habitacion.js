@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkoutPicker.setDate(fechaFinParam, false);
     const galleryContainer = document.getElementById('gallery-container');
     // Pedimos los datos de la habitación al servidor
-fetch(`http://localhost:4000/api/habitaciones/${roomId}`)
+fetch(`https://hotel-backend-production-ed93.up.railway.app/api/habitaciones/${roomId}`)
     .then(response => {
         if (!response.ok) { // Captura el error 500 aquí
             throw new Error(`Error ${response.status}: ${response.statusText}`);

@@ -3,7 +3,7 @@ document.getElementById('login-form').addEventListener('submit', (event) => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    fetch('http://localhost:4000/api/clientes/login', {
+    fetch('https://hotel-backend-production-ed93.up.railway.app/api/clientes/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, contrasena: password })

@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    fetch(`http://localhost:4000/api/reservas/${codigoReserva}`)
+    fetch(`https://hotel-backend-production-ed93.up.railway.app/api/reservas/${codigoReserva}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Reserva no encontrada.');

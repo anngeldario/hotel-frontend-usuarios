@@ -11,7 +11,7 @@ document.getElementById('registro-form').addEventListener('submit', (event) => {
     errorMessage.textContent = '';
     successMessage.textContent = '';
 
-    fetch('http://localhost:4000/api/clientes/registro', {
+    fetch('https://hotel-backend-production-ed93.up.railway.app/api/clientes/registro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, apellido, email, telefono, contrasena: password })

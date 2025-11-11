@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // El resto de tu código para cargar el resumen y enviar el formulario no cambia
-    fetch(`http://localhost:4000/api/habitaciones/${roomId}`)
+    fetch(`https://hotel-backend-production-ed93.up.railway.app/api/habitaciones/${roomId}`)
         .then(response => response.json())
         .then(habitacion => {
             summaryRoomNameEl.textContent = `${habitacion.nombre} #${habitacion.numero}`;
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             num_huespedes: huespedes, cliente: cliente
         };
 
-        fetch('http://localhost:4000/api/reservas', {
+        fetch('https://hotel-backend-production-ed93.up.railway.app/api/reservas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosReserva),

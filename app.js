@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ... (Pega aquí el resto de tus funciones cargarHabitacionesPopulares y mostrarHabitacionesEnCarrusel) ...
     function cargarHabitacionesPopulares() {
-        fetch('http://localhost:4000/api/habitaciones')
+        fetch('https://hotel-backend-production-ed93.up.railway.app/api/habitaciones')
             .then(response => response.json())
             .then(habitaciones => {
                 mostrarHabitacionesEnCarrusel(habitaciones);

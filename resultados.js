@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     searchSummary.textContent = `Resultados del ${fechaInicio} al ${fechaFin} para ${huespedes} huéspedes.`;
 
     // El resto del código para buscar y mostrar resultados no cambia...
-    const apiUrl = `http://localhost:4000/api/habitaciones/disponibles?inicio=${fechaInicio}&fin=${fechaFin}&huespedes=${huespedes}`;
+    const apiUrl = `https://hotel-backend-production-ed93.up.railway.app/api/habitaciones/disponibles?inicio=${fechaInicio}&fin=${fechaFin}&huespedes=${huespedes}`;
 
     fetch(apiUrl)
         .then(response => response.json())
