@@ -121,8 +121,6 @@ fetch(`https://hotel-backend-production-ed93.up.railway.app/api/habitaciones/${r
                 galleryContainer.appendChild(img);
             });
         }
-
-            renderizarServicios(habitacion.servicios);
             calcularPrecioTotal();
         })
         .catch(error => console.error('Error al cargar los detalles:', error));
@@ -144,18 +142,6 @@ fetch(`https://hotel-backend-production-ed93.up.railway.app/api/habitaciones/${r
         } else {
             priceCalculationEl.textContent = 'Selecciona ambas fechas';
             totalPriceEl.textContent = '';
-        }
-    }
-
-    // Función para mostrar los servicios
-    function renderizarServicios(servicios) {
-        const iconosServicios = { 'WiFi': 'bi-wifi', 'TV': 'bi-tv', 'Aire acondicionado': 'bi-snow', 'Minibar': 'bi-cup-straw', 'Jacuzzi': 'bi-hot-tub' };
-        if (servicios) {
-            const listaServicios = servicios.split(', ');
-            listaServicios.forEach(servicio => {
-                const iconoClase = iconosServicios[servicio] || 'bi-check-lg';
-                roomServicesEl.innerHTML += `<div class="service-icon me-3" title="${servicio}"><i class="bi ${iconoClase}"></i><span>${servicio}</span></div>`;
-            });
         }
     }
 });
