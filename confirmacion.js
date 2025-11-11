@@ -1,4 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. Buscamos el token de sesión del usuario
+    const token = localStorage.getItem('authToken');
+
+    if (token) {
+        // 2. Si existe, lo decodificamos usando la función global de auth.js
+        const userData = parseJwt(token);
+
+        if (userData) {
+            // 3. Rellenamos los campos del formulario con los datos del token
+            // (Usamos .value para los inputs)
+            document.getElementById('nombre').value = userData.nombre;
+            document.getElementById('apellido').value = userData.apellido;
+            document.getElementById('email').value = userData.email;
+
+            // Nota: El teléfono no lo rellenamos porque no lo guardamos
+            // en el token, así que el usuario sí tendrá que escribirlo.
+        }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const roomId = params.get('id');
     const fechaInicio = params.get('inicio');
@@ -11,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customerForm = document.getElementById('customer-form');
     const creditCardForm = document.getElementById('credit-card-form');
     const confirmButton = document.getElementById('confirm-button');
-    
+
     // --- ESTA ES LA LÓGICA CORREGIDA ---
     document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
         radio.addEventListener('change', (event) => {
@@ -98,19 +118,19 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosReserva),
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.codigo) {
-                window.location.href = `exito.html?codigo=${data.codigo}`;
-            } else {
-                throw new Error(data.mensaje || 'Error desconocido');
-            }
-        })
-        .catch(error => {
-            console.error('Error al crear la reserva:', error);
-            alert('Hubo un error al confirmar tu reserva. Intenta de nuevo.');
-            confirmButton.disabled = false;
-            confirmButton.innerHTML = 'Confirmar y Pagar';
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.codigo) {
+                    window.location.href = `exito.html?codigo=${data.codigo}`;
+                } else {
+                    throw new Error(data.mensaje || 'Error desconocido');
+                }
+            })
+            .catch(error => {
+                console.error('Error al crear la reserva:', error);
+                alert('Hubo un error al confirmar tu reserva. Intenta de nuevo.');
+                confirmButton.disabled = false;
+                confirmButton.innerHTML = 'Confirmar y Pagar';
+            });
     }
 });

@@ -1,5 +1,13 @@
+function parseJwt(token) {
+    try {
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+        return null;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const loginButton = document.getElementById('login-button');
     const profileMenu = document.getElementById('profile-menu');
     const profileNameNav = document.getElementById('profile-name-nav');
@@ -7,23 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const token = localStorage.getItem('authToken');
 
-    // Función para decodificar el token JWT
-    function parseJwt(token) {
-        try {
-            return JSON.parse(atob(token.split('.')[1]));
-        } catch (e) {
-            return null;
-        }
-    }
-
     if (token) {
         // Si encontramos un token, el usuario ha iniciado sesión
-        const userData = parseJwt(token);
-        
+        const userData = parseJwt(token); // La función ahora es global
+
         if (userData) {
             // 1. Ocultamos el botón de Login
             loginButton.classList.add('d-none');
-            
+
             // 2. Mostramos el menú de perfil
             profileMenu.classList.remove('d-none');
 
@@ -38,5 +37,5 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-    // Si no hay token, no hacemos nada. La página mostrará el botón de Login por defecto.
+
 });
