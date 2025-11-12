@@ -60,118 +60,117 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.innerHTML = `<h1 class="text-center text-red-500 p-10">Error al cargar la reserva: ${error.message}</h1>`;
         });
 
-    // 5. Función para generar el PDF (VERSIÓN MANUAL DE ALTA CALIDAD)
+    // 5. Función para generar el PDF (VERSIÓN PROFESIONAL DE ALTA CALIDAD)
     function generarPDF(reserva, noches, total) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Define tu color primario (el verde/teal)
-        const primaryColor = [20, 184, 166];
+        // --- Definición de Colores ---
+        const primaryColor = [20, 184, 166]; // Tu verde/teal
+        const blackColor = [0, 0, 0];
+        const grayColor = [100, 100, 100];
+        const rightAlign = 196; // Margen derecho (A4 es 210mm)
+        const leftAlign = 14;  // Margen izquierdo
 
-        // --- TÍTULO ---
-        doc.setFontSize(22);
+        // --- 1. ENCABEZADO ---
+        doc.setFontSize(30);
         doc.setFont('helvetica', 'bold');
-        doc.text('Hotel Oasis', 105, 20, { align: 'center' });
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100); // Color gris
-        doc.text('Recibo de Confirmación de Reserva', 105, 30, { align: 'center' });
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text('Hotel Oasis', leftAlign, 25);
 
-        // --- CÓDIGO DE RESERVA ---
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+        doc.text('Recibo de Confirmación de Reserva', leftAlign, 33);
+
+        // --- 2. INFORMACIÓN DE CLIENTE Y RESERVA ---
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.line(leftAlign, 42, rightAlign, 42); // Línea verde
+
+        // Info del Cliente (Izquierda)
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(100);
-        doc.text('Código de Reserva', 14, 45);
-        doc.setFontSize(12);
+        doc.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+        doc.text('CLIENTE:', leftAlign, 50);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${reserva.nombre} ${reserva.apellido}`, leftAlign, 56);
+        doc.text(reserva.email, leftAlign, 62); // Asumiendo que la API devuelve el email
+
+        // Info de la Reserva (Derecha)
         doc.setFont('helvetica', 'bold');
+        doc.text('CÓDIGO DE RESERVA:', 135, 50);
+        doc.text('FECHA DE EMISIÓN:', 135, 62);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text(reserva.codigo_reserva, 14, 52);
+        doc.text(reserva.codigo_reserva, rightAlign, 50, { align: 'right' });
+        doc.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+        doc.setFontSize(10);
+        doc.text(new Date().toLocaleDateString('es-MX'), rightAlign, 62, { align: 'right' });
 
-        // --- DETALLES DE CLIENTE Y HABITACIÓN ---
+
+        // --- 3. TABLA DE DETALLES DE ESTANCIA ---
         doc.autoTable({
-            startY: 60,
-            theme: 'plain', // Sin líneas
+            startY: 75,
+            head: [['Habitación', 'Check-in', 'Check-out', 'Huéspedes', 'Noches']],
             body: [
-                ['Cliente', `${reserva.nombre} ${reserva.apellido}`],
-                ['Habitación', `${reserva.tipo_nombre} #${reserva.numero}`],
+                [
+                    `${reserva.tipo_nombre} #${reserva.numero}`,
+                    new Date(reserva.fecha_inicio).toLocaleDateString('es-MX'),
+                    new Date(reserva.fecha_fin).toLocaleDateString('es-MX'),
+                    `${reserva.num_huespedes} Adultos`,
+                    noches
+                ]
             ],
-            styles: {
-                fontSize: 11,
-                cellPadding: 2,
-            },
-            columnStyles: {
-                0: { fontStyle: 'bold', textColor: [100, 100, 100], cellWidth: 40 },
-                1: { fontStyle: 'normal', textColor: [0, 0, 0], cellWidth: 'auto', halign: 'right' }
-            }
-        });
-
-        const table1_Y = doc.lastAutoTable.finalY;
-
-        // --- FECHAS Y HUÉSPEDES (Como en tu imagen) ---
-        doc.autoTable({
-            startY: table1_Y + 5,
-            theme: 'plain',
-            body: [
-                ['Check-in', 'Check-out', 'Huéspedes'], // Encabezados
-                [new Date(reserva.fecha_inicio).toLocaleDateString(), new Date(reserva.fecha_fin).toLocaleDateString(), `${reserva.num_huespedes} Adultos`] // Datos
-            ],
+            theme: 'grid',
             headStyles: {
-                fontStyle: 'bold',
-                textColor: [100, 100, 100],
-                fontSize: 10,
-                cellPadding: { top: 2, left: 0, bottom: 1, right: 0 }
+                fillColor: primaryColor,
+                textColor: [255, 255, 255], // Texto blanco
+                fontStyle: 'bold'
             },
-            bodyStyles: {
-                fontStyle: 'normal',
-                textColor: [0, 0, 0],
-                fontSize: 11,
-                cellPadding: { top: 0, left: 0, bottom: 2, right: 0 }
-            },
-            columnStyles: {
-                0: { halign: 'left' },
-                1: { halign: 'center' },
-                2: { halign: 'right' }
-            }
+            margin: { left: leftAlign, right: leftAlign },
         });
 
-        const table2_Y = doc.lastAutoTable.finalY;
+        // --- 4. RESUMEN FINANCIERO (Alineado a la derecha) ---
+        const finalY = doc.lastAutoTable.finalY + 15;
+        const precioNoche = parseFloat(reserva.precio_por_noche);
 
-        // --- LÍNEA DIVISORIA PUNTEADA ---
-        doc.setLineDashPattern([1, 1], 0);
-        doc.line(14, table2_Y + 8, 196, table2_Y + 8); // Dibuja línea de 14 a 196 (márgenes)
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+
+        const summaryLeft = 140; // Dónde empieza el texto
+
+        doc.text('Costo por noche:', summaryLeft, finalY);
+        doc.text(`$${precioNoche.toFixed(2)} MXN`, rightAlign, finalY, { align: 'right' });
+
+        doc.text('Noches:', summaryLeft, finalY + 7);
+        doc.text(noches.toString(), rightAlign, finalY + 7, { align: 'right' });
+
+        // Línea divisoria
+        doc.setLineDashPattern([0.5, 0.5], 0);
+        doc.line(summaryLeft - 2, finalY + 11, rightAlign, finalY + 11);
         doc.setLineDashPattern([], 0);
 
-        // --- COSTOS ---
-        doc.autoTable({
-            startY: table2_Y + 15,
-            theme: 'plain',
-            body: [
-                ['Costo por noche:', `$${parseFloat(reserva.precio_por_noche).toFixed(2)} MXN x ${noches} noches`],
-            ],
-            styles: {
-                fontSize: 11,
-                cellPadding: 1,
-            },
-            columnStyles: {
-                0: { textColor: [100, 100, 100] },
-                1: { textColor: [100, 100, 100], halign: 'right' }
-            }
-        });
-
-        // --- TOTAL ---
-        doc.setFontSize(16);
+        // TOTAL
+        doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0);
-        doc.text('Total a Pagar:', 14, doc.lastAutoTable.finalY + 10);
+        doc.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+        doc.text('Total a Pagar:', summaryLeft, finalY + 18);
 
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text(`$${total.toFixed(2)} MXN`, 196, doc.lastAutoTable.finalY + 10, { align: 'right' });
+        doc.text(`$${total.toFixed(2)} MXN`, rightAlign, finalY + 18, { align: 'right' });
 
-        // --- PIE DE PÁGINA ---
+
+        // --- 5. PIE DE PÁGINA ---
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(150);
-        doc.text('Presenta este código al momento de tu check-in. ¡Gracias por tu preferencia!', 105, doc.lastAutoTable.finalY + 25, { align: 'center' });
+        doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+        const pageHeight = doc.internal.pageSize.height;
+        doc.text('Presenta este código al momento de tu check-in. ¡Gracias por tu preferencia!', 105, pageHeight - 15, { align: 'center' });
+        doc.text('Hotel Oasis | Recibo de Confirmación', 105, pageHeight - 10, { align: 'center' });
 
         // --- GUARDAR ---
         doc.save(`Reserva-HotelOasis-${reserva.codigo_reserva}.pdf`);
