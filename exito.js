@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elHuespedes.textContent = `${reserva.num_huespedes} Adultos`;
             elCalculo.textContent = `$${precioNoche.toFixed(2)} MXN x ${diffDias} noches`;
             elTotal.textContent = `$${total.toFixed(2)} MXN`;
-            
+
             // 4. Activamos el botón de descarga
             btnDescargar.addEventListener('click', (e) => {
                 e.preventDefault(); // Prevenimos que el enlace navegue
@@ -60,60 +60,24 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.innerHTML = `<h1 class="text-center text-red-500 p-10">Error al cargar la reserva: ${error.message}</h1>`;
         });
 
-    // 5. Función para generar el PDF
+    // 5. Función para generar el PDF (¡NUEVA VERSIÓN CON HTML2PDF!)
     function generarPDF(reserva, noches, total) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        // Formateamos los datos para la tabla del PDF
-        const tableData = [
-            ['Código de Reserva:', reserva.codigo_reserva],
-            ['Cliente:', `${reserva.nombre} ${reserva.apellido}`],
-            ['Email:', reserva.email], // Asumimos que la API devuelve el email
-            ['Habitación:', `${reserva.tipo_nombre} #${reserva.numero}`],
-            ['Check-in:', new Date(reserva.fecha_inicio).toLocaleDateString()],
-            ['Check-out:', new Date(reserva.fecha_fin).toLocaleDateString()],
-            ['Noches:', noches],
-            ['Huéspedes:', reserva.num_huespedes],
-            ['Precio por noche:', `$${parseFloat(reserva.precio_por_noche).toFixed(2)} MXN`],
-        ];
 
-        // Título
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Hotel Oasis', 105, 20, { align: 'center' });
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Recibo de Confirmación de Reserva', 105, 30, { align: 'center' });
+        // 1. Opciones para el PDF
+        const options = {
+            margin: 0.5, // 0.5 pulgadas de margen (puedes ajustarlo)
+            filename: `Reserva-HotelOasis-${reserva.codigo_reserva}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true }, // Aumenta la escala para mejor calidad de imagen
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
 
-        // Tabla de datos
-        doc.autoTable({
-            startY: 45,
-            head: [['Detalle', 'Información']],
-            body: tableData,
-            theme: 'striped',
-            headStyles: { fillColor: [20, 184, 166] }, // El color 'primary'
-            styles: { fontSize: 11, cellPadding: 2.5 },
-            columnStyles: {
-                0: { fontStyle: 'bold', cellWidth: 50 },
-                1: { cellWidth: 'auto' }
-            }
-        });
-        
-        // Total al final
-        const finalY = doc.lastAutoTable.finalY;
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Total a Pagar:', 14, finalY + 15);
-        doc.setTextColor(20, 184, 166); // Color 'primary'
-        doc.text(`$${total.toFixed(2)} MXN`, 196, finalY + 15, { align: 'right' });
-        
-        // Mensaje de pie de página
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text('Presenta este código al momento de tu check-in. ¡Gracias por tu preferencia!', 105, finalY + 25, { align: 'center' });
+        // 2. Seleccionar el elemento que queremos imprimir
+        // (Le pusimos el ID 'ticket-content' al div que envuelve el recibo)
+        const element = document.getElementById('ticket-content');
 
-        // Guardar el archivo
-        doc.save(`Reserva-HotelOasis-${reserva.codigo_reserva}.pdf`);
+        // 3. ¡La magia!
+        // Usamos html2pdf() y le pasamos el elemento y las opciones
+        html2pdf().from(element).set(options).save();
     }
 });
