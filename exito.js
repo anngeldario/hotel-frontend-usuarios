@@ -60,24 +60,120 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.innerHTML = `<h1 class="text-center text-red-500 p-10">Error al cargar la reserva: ${error.message}</h1>`;
         });
 
-    // 5. Función para generar el PDF (¡NUEVA VERSIÓN CON HTML2PDF!)
+    // 5. Función para generar el PDF (VERSIÓN MANUAL DE ALTA CALIDAD)
     function generarPDF(reserva, noches, total) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
 
-        // 1. Opciones para el PDF
-        const options = {
-            margin: 0.5, // 0.5 pulgadas de margen (puedes ajustarlo)
-            filename: `Reserva-HotelOasis-${reserva.codigo_reserva}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true }, // Aumenta la escala para mejor calidad de imagen
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
+        // Define tu color primario (el verde/teal)
+        const primaryColor = [20, 184, 166];
 
-        // 2. Seleccionar el elemento que queremos imprimir
-        // (Le pusimos el ID 'ticket-content' al div que envuelve el recibo)
-        const element = document.getElementById('ticket-content');
+        // --- TÍTULO ---
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Hotel Oasis', 105, 20, { align: 'center' });
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100); // Color gris
+        doc.text('Recibo de Confirmación de Reserva', 105, 30, { align: 'center' });
 
-        // 3. ¡La magia!
-        // Usamos html2pdf() y le pasamos el elemento y las opciones
-        html2pdf().from(element).set(options).save();
+        // --- CÓDIGO DE RESERVA ---
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(100);
+        doc.text('Código de Reserva', 14, 45);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text(reserva.codigo_reserva, 14, 52);
+
+        // --- DETALLES DE CLIENTE Y HABITACIÓN ---
+        doc.autoTable({
+            startY: 60,
+            theme: 'plain', // Sin líneas
+            body: [
+                ['Cliente', `${reserva.nombre} ${reserva.apellido}`],
+                ['Habitación', `${reserva.tipo_nombre} #${reserva.numero}`],
+            ],
+            styles: {
+                fontSize: 11,
+                cellPadding: 2,
+            },
+            columnStyles: {
+                0: { fontStyle: 'bold', textColor: [100, 100, 100], cellWidth: 40 },
+                1: { fontStyle: 'normal', textColor: [0, 0, 0], cellWidth: 'auto', halign: 'right' }
+            }
+        });
+
+        const table1_Y = doc.lastAutoTable.finalY;
+
+        // --- FECHAS Y HUÉSPEDES (Como en tu imagen) ---
+        doc.autoTable({
+            startY: table1_Y + 5,
+            theme: 'plain',
+            body: [
+                ['Check-in', 'Check-out', 'Huéspedes'], // Encabezados
+                [new Date(reserva.fecha_inicio).toLocaleDateString(), new Date(reserva.fecha_fin).toLocaleDateString(), `${reserva.num_huespedes} Adultos`] // Datos
+            ],
+            headStyles: {
+                fontStyle: 'bold',
+                textColor: [100, 100, 100],
+                fontSize: 10,
+                cellPadding: { top: 2, left: 0, bottom: 1, right: 0 }
+            },
+            bodyStyles: {
+                fontStyle: 'normal',
+                textColor: [0, 0, 0],
+                fontSize: 11,
+                cellPadding: { top: 0, left: 0, bottom: 2, right: 0 }
+            },
+            columnStyles: {
+                0: { halign: 'left' },
+                1: { halign: 'center' },
+                2: { halign: 'right' }
+            }
+        });
+
+        const table2_Y = doc.lastAutoTable.finalY;
+
+        // --- LÍNEA DIVISORIA PUNTEADA ---
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(14, table2_Y + 8, 196, table2_Y + 8); // Dibuja línea de 14 a 196 (márgenes)
+        doc.setLineDashPattern([], 0);
+
+        // --- COSTOS ---
+        doc.autoTable({
+            startY: table2_Y + 15,
+            theme: 'plain',
+            body: [
+                ['Costo por noche:', `$${parseFloat(reserva.precio_por_noche).toFixed(2)} MXN x ${noches} noches`],
+            ],
+            styles: {
+                fontSize: 11,
+                cellPadding: 1,
+            },
+            columnStyles: {
+                0: { textColor: [100, 100, 100] },
+                1: { textColor: [100, 100, 100], halign: 'right' }
+            }
+        });
+
+        // --- TOTAL ---
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0);
+        doc.text('Total a Pagar:', 14, doc.lastAutoTable.finalY + 10);
+
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text(`$${total.toFixed(2)} MXN`, 196, doc.lastAutoTable.finalY + 10, { align: 'right' });
+
+        // --- PIE DE PÁGINA ---
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150);
+        doc.text('Presenta este código al momento de tu check-in. ¡Gracias por tu preferencia!', 105, doc.lastAutoTable.finalY + 25, { align: 'center' });
+
+        // --- GUARDAR ---
+        doc.save(`Reserva-HotelOasis-${reserva.codigo_reserva}.pdf`);
     }
 });

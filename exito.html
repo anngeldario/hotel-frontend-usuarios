@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -8,7 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -38,6 +40,7 @@
             background-size: 51% 1.5rem;
             background-repeat: repeat-y;
         }
+
         .dark .perforated-edge {
             background-image:
                 radial-gradient(circle at -0.5rem 0.75rem, transparent 0.5rem, #0f172a 0.5rem),
@@ -49,9 +52,10 @@
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-700 dark:text-slate-300 antialiased">
     <div class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-lg mx-auto">
-            
+
             <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+                <div
+                    class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
                     <span class="material-symbols-outlined text-4xl">check_circle</span>
                 </div>
                 <h1 class="text-3xl font-bold text-slate-900 dark:text-white">¡Tu reserva está confirmada!</h1>
@@ -63,34 +67,42 @@
                         <div class="p-6 sm:p-8">
                             <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                                 <div>
-                                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Código de Reserva</h2>
-                                    <p class="font-mono text-primary font-bold text-lg tracking-wider" id="ticket-codigo-reserva">Cargando...</p>
+                                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Código de
+                                        Reserva</h2>
+                                    <p class="font-mono text-primary font-bold text-lg tracking-wider"
+                                        id="ticket-codigo-reserva">Cargando...</p>
                                 </div>
                                 <div class="w-24 h-24 p-2 bg-white dark:bg-slate-700 rounded-lg shadow-sm">
-                                    <img alt="QR code" class="w-full h-full object-contain" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=HotelOasis" />
+                                    <img alt="QR code" class="w-full h-full object-contain"
+                                        src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=HotelOasis" />
                                 </div>
                             </div>
                             <div class="space-y-4">
                                 <div class="flex justify-between items-center">
                                     <span class="text-slate-500 dark:text-slate-400">Cliente</span>
-                                    <span class="font-medium text-slate-900 dark:text-white text-right" id="ticket-cliente-nombre">Cargando...</span>
+                                    <span class="font-medium text-slate-900 dark:text-white text-right"
+                                        id="ticket-cliente-nombre">Cargando...</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-slate-500 dark:text-slate-400">Habitación</span>
-                                    <span class="font-medium text-slate-900 dark:text-white text-right" id="ticket-habitacion-info">Cargando...</span>
+                                    <span class="font-medium text-slate-900 dark:text-white text-right"
+                                        id="ticket-habitacion-info">Cargando...</span>
                                 </div>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                     <div class="flex flex-col">
                                         <span class="text-slate-500 dark:text-slate-400 text-sm">Check-in</span>
-                                        <span class="font-medium text-slate-900 dark:text-white" id="ticket-checkin">--/--/----</span>
+                                        <span class="font-medium text-slate-900 dark:text-white"
+                                            id="ticket-checkin">--/--/----</span>
                                     </div>
                                     <div class="flex flex-col">
                                         <span class="text-slate-500 dark:text-slate-400 text-sm">Check-out</span>
-                                        <span class="font-medium text-slate-900 dark:text-white" id="ticket-checkout">--/--/----</span>
+                                        <span class="font-medium text-slate-900 dark:text-white"
+                                            id="ticket-checkout">--/--/----</span>
                                     </div>
                                     <div class="flex flex-col col-span-2 sm:col-span-1 sm:text-right">
                                         <span class="text-slate-500 dark:text-slate-400 text-sm">Huéspedes</span>
-                                        <span class="font-medium text-slate-900 dark:text-white" id="ticket-huespedes">Cargando...</span>
+                                        <span class="font-medium text-slate-900 dark:text-white"
+                                            id="ticket-huespedes">Cargando...</span>
                                     </div>
                                 </div>
                             </div>
@@ -102,22 +114,28 @@
                                     <span>Costo por noche</span>
                                     <span id="ticket-calculo-precio">Cargando...</span>
                                 </div>
-                                <div class="flex justify-between items-center text-xl font-bold text-slate-900 dark:text-white">
+                                <div
+                                    class="flex justify-between items-center text-xl font-bold text-slate-900 dark:text-white">
                                     <span>Total a Pagar:</span>
                                     <span class="text-primary" id="ticket-total-pagar">$0.00 MXN</span>
                                 </div>
                             </div>
-                            <p class="mt-6 text-sm text-center text-slate-500 dark:text-slate-400">Presenta este código al momento de tu check-in. ¡Gracias por tu preferencia!</p>
+                            <p class="mt-6 text-sm text-center text-slate-500 dark:text-slate-400">Presenta este código
+                                al momento de tu check-in. ¡Gracias por tu preferencia!</p>
                         </div>
-                    </div> </div>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <a id="descargar-pdf-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background-light dark:focus:ring-offset-background-dark transition-all" href="#">
+                <a id="descargar-pdf-btn"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background-light dark:focus:ring-offset-background-dark transition-all"
+                    href="#">
                     <span class="material-symbols-outlined">download</span>
                     Descargar Recibo
                 </a>
-                <a class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 focus:ring-offset-background-light dark:focus:ring-offset-background-dark transition-all" href="index.html">
+                <a class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 focus:ring-offset-background-light dark:focus:ring-offset-background-dark transition-all"
+                    href="index.html">
                     Ir a la página principal
                 </a>
             </div>
@@ -126,4 +144,5 @@
 
     <script src="exito.js" defer></script>
 </body>
+
 </html>
