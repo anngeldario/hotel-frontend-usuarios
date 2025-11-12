@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const elCalculo = document.getElementById('ticket-calculo-precio');
     const elTotal = document.getElementById('ticket-total-pagar');
     const btnDescargar = document.getElementById('descargar-pdf-btn');
+    const elQrCode = document.getElementById('ticket-qr-code');
 
     // URL de tu backend (Asegúrate de que sea la correcta)
     const backendUrl = 'https://hotel-backend-production-ed93.up.railway.app';
@@ -48,6 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
             elHuespedes.textContent = `${reserva.num_huespedes} Adultos`;
             elCalculo.textContent = `$${precioNoche.toFixed(2)} MXN x ${diffDias} noches`;
             elTotal.textContent = `$${total.toFixed(2)} MXN`;
+
+            if (elQrCode) {
+                elQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${reserva.codigo_reserva}`;
+            }
 
             // 4. Activamos el botón de descarga
             btnDescargar.addEventListener('click', (e) => {
