@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editApellidoInput.value = userData.apellido;
         editEmailInput.value = userData.email;
     }
-    
+
     // --- CARGAR HISTORIAL DE RESERVAS (CON MANEJO DE ERRORES MEJORADO) ---
     fetch('https://hotel-backend-production-ed93.up.railway.app/api/clientes/mis-reservas', {
         headers: {
@@ -98,20 +98,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const reservaCardHTML = `
-                <div class="border border-gray-200 rounded-lg p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-md transition-shadow duration-300">
-                    <div>
-                        <h4 class="font-bold text-lg">Habitación ${reserva.tipo_nombre} #${reserva.numero}</h4>
-                        <p class="text-sm text-subtle-light mt-1">Código: <span class="font-mono">${reserva.codigo_reserva}</span></p>
-                        <div class="flex items-center text-sm text-subtle-light mt-2 space-x-4">
-                            <span>Check-in: ${new Date(reserva.fecha_inicio).toLocaleDateString()}</span>
-                            <span>Check-out: ${new Date(reserva.fecha_fin).toLocaleDateString()}</span>
+                <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-300">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div>
+                            <h4 class="font-bold text-lg">Habitación ${reserva.tipo_nombre} #${reserva.numero}</h4>
+                            <p class="text-sm text-subtle-light mt-1">Código: <span class="font-mono">${reserva.codigo_reserva}</span></p>
+                            <div class="flex items-center text-sm text-subtle-light mt-2 space-x-4">
+                                <span>Check-in: ${new Date(reserva.fecha_inicio).toLocaleDateString()}</span>
+                                <span>Check-out: ${new Date(reserva.fecha_fin).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class_A="mt-4 sm:mt-0 flex flex-col items-end gap-3">
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full ${badgeClasses}">${reserva.estado}</span>
+                            
+                            <button 
+                                data-codigo="${reserva.codigo_reserva}" 
+                                class="ver-recibo-btn text-sm font-semibold text-primary hover:underline">
+                                Ver Recibo
+                            </button>
                         </div>
                     </div>
-                    <div class="mt-4 sm:mt-0">
-                        <span class="px-3 py-1 text-sm font-semibold rounded-full ${badgeClasses}">${reserva.estado}</span>
-                    </div>
                 </div>
-            `;
+                `;
                 reservationsContainer.innerHTML += reservaCardHTML;
             });
         })
@@ -194,4 +202,231 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('authToken');
         window.location.href = 'index.html';
     });
+
+
+    
+
+    // --- LÓGICA DEL MODAL DE RECIBO ---
+
+    const modalBackdrop = document.getElementById('recibo-modal-backdrop');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const reservationsContainerEl = document.getElementById('reservations-container');
+    const btnDescargarPDFModal = document.getElementById('modal-descargar-pdf-btn');
+
+    // Variable para guardar los datos de la reserva actual
+    let reservaActualParaPDF = null;
+
+    // Event listener para CERRAR el modal
+    closeModalBtn.addEventListener('click', () => {
+        modalBackdrop.classList.add('hidden');
+    });
+
+    // Event listener para ABRIR el modal (usando delegación de eventos)
+    reservationsContainerEl.addEventListener('click', (event) => {
+        const boton = event.target.closest('.ver-recibo-btn');
+        if (boton) {
+            const codigo = boton.dataset.codigo;
+            mostrarRecibo(codigo);
+        }
+    });
+
+    // Event listener para el botón de DESCARGAR PDF dentro del modal
+    btnDescargarPDFModal.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (reservaActualParaPDF) {
+            // Calculamos noches y total
+            const dateInicio = new Date(reservaActualParaPDF.fecha_inicio);
+            const dateFin = new Date(reservaActualParaPDF.fecha_fin);
+            const noches = Math.ceil((dateFin.getTime() - dateInicio.getTime()) / (1000 * 3600 * 24));
+            const total = noches * parseFloat(reservaActualParaPDF.precio_por_noche);
+
+            // Llamamos a la función de generar PDF
+            generarPDF(reservaActualParaPDF, noches, total);
+        } else {
+            alert("Error: No se han cargado los datos de la reserva para generar el PDF.");
+        }
+    });
+
+
+    // --- Función para buscar datos y rellenar el modal ---
+    function mostrarRecibo(codigoReserva) {
+        // 1. Mostrar el modal con "Cargando..."
+        modalBackdrop.classList.remove('hidden');
+
+        // Referencias a los campos del modal (los copiamos de exito.js)
+        const elCodigo = document.getElementById('modal-ticket-codigo-reserva');
+        const elCliente = document.getElementById('modal-ticket-cliente-nombre');
+        const elHabitacion = document.getElementById('modal-ticket-habitacion-info');
+        const elCheckin = document.getElementById('modal-ticket-checkin');
+        const elCheckout = document.getElementById('modal-ticket-checkout');
+        const elHuespedes = document.getElementById('modal-ticket-huespedes');
+        const elCalculo = document.getElementById('modal-ticket-calculo-precio');
+        const elTotal = document.getElementById('modal-ticket-total-pagar');
+        const elQrCode = document.getElementById('modal-ticket-qr-code');
+
+        // 2. Buscar los datos de ESA reserva específica
+        // (Obtenemos el token del inicio del script)
+        const token = localStorage.getItem('authToken');
+
+        // ¡Usamos la URL de tu backend! (Asegúrate que sea la correcta)
+        const backendUrl = 'https://hotel-backend-production-ed93.up.railway.app';
+
+        fetch(`${backendUrl}/api/reservas/${codigoReserva}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Reserva no encontrada o no autorizada.');
+                }
+                return response.json();
+            })
+            .then(reserva => {
+                // 3. Guardamos la reserva para el PDF
+                reservaActualParaPDF = reserva;
+
+                // 4. Calculamos los datos
+                const dateInicio = new Date(reserva.fecha_inicio);
+                const dateFin = new Date(reserva.fecha_fin);
+                const diffDias = Math.ceil((dateFin.getTime() - dateInicio.getTime()) / (1000 * 3600 * 24));
+                const precioNoche = parseFloat(reserva.precio_por_noche);
+                const total = diffDias * precioNoche;
+
+                // 5. Rellenamos los campos del MODAL
+                elCodigo.textContent = reserva.codigo_reserva;
+                elCliente.textContent = `${reserva.nombre} ${reserva.apellido}`;
+                elHabitacion.textContent = `${reserva.tipo_nombre} #${reserva.numero}`;
+                elCheckin.textContent = dateInicio.toLocaleDateString();
+                elCheckout.textContent = dateFin.toLocaleDateString();
+                elHuespedes.textContent = `${reserva.num_huespedes} Adultos`;
+                elCalculo.textContent = `$${precioNoche.toFixed(2)} MXN x ${diffDias} noches`;
+                elTotal.textContent = `$${total.toFixed(2)} MXN`;
+                elQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${reserva.codigo_reserva}`;
+            })
+            .catch(error => {
+                console.error('Error al cargar los detalles de la reserva:', error);
+                alert(error.message);
+                modalBackdrop.classList.add('hidden'); // Ocultar modal si hay error
+            });
+    }
+
+
+    // --- Función para generar el PDF (Copiada de exito.js) ---
+    function generarPDF(reserva, noches, total) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // --- Definición de Colores ---
+        const primaryColor = [20, 184, 166]; // Tu verde/teal
+        const blackColor = [40, 40, 40];
+        const grayColor = [120, 120, 120];
+        const rightAlign = 196;
+        const leftAlign = 14;
+        let yPos = 25;
+
+        // --- 1. ENCABEZADO ---
+        doc.setFontSize(30);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text('Hotel Oasis', leftAlign, yPos);
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+        doc.text('Recibo de Confirmación de Reserva', leftAlign, yPos + 8);
+        yPos += 20;
+
+        // --- 2. INFORMACIÓN DE CLIENTE Y RESERVA ---
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.line(leftAlign, yPos, rightAlign, yPos);
+        yPos += 8;
+
+        // Info del Cliente (Izquierda)
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+        doc.text('CLIENTE:', leftAlign, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${reserva.nombre} ${reserva.apellido}`, leftAlign, yPos + 6);
+        doc.text(reserva.email, leftAlign, yPos + 12);
+
+        // Info de la Reserva (Derecha)
+        doc.setFont('helvetica', 'bold');
+        doc.text('CÓDIGO DE RESERVA:', 135, yPos);
+        doc.text('FECHA DE EMISIÓN:', 135, yPos + 12);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text(reserva.codigo_reserva, rightAlign, yPos, { align: 'right' });
+        doc.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+        doc.setFontSize(10);
+        doc.text(new Date().toLocaleDateString('es-MX'), rightAlign, yPos + 12, { align: 'right' });
+        yPos += 25;
+
+        // --- 3. TABLA DE DETALLES DE ESTANCIA ---
+        doc.autoTable({
+            startY: yPos,
+            head: [['Habitación', 'Check-in', 'Check-out', 'Huéspedes', 'Noches']],
+            body: [
+                [
+                    `${reserva.tipo_nombre} #${reserva.numero}`,
+                    new Date(reserva.fecha_inicio).toLocaleDateString('es-MX'),
+                    new Date(reserva.fecha_fin).toLocaleDateString('es-MX'),
+                    `${reserva.num_huespedes} Adultos`,
+                    noches
+                ]
+            ],
+            theme: 'grid',
+            headStyles: {
+                fillColor: primaryColor,
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
+            },
+            margin: { left: leftAlign, right: leftAlign },
+        });
+        yPos = doc.lastAutoTable.finalY + 15;
+
+        // --- 4. RESUMEN FINANCIERO (Alineado a la derecha) ---
+        const precioNoche = parseFloat(reserva.precio_por_noche);
+        const summaryLeft = 140;
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+
+        doc.text('Costo por noche:', summaryLeft, yPos);
+        doc.text(`$${precioNoche.toFixed(2)} MXN`, rightAlign, yPos, { align: 'right' });
+
+        doc.text('Noches:', summaryLeft, yPos + 7);
+        doc.text(noches.toString(), rightAlign, yPos + 7, { align: 'right' });
+
+        doc.setLineDashPattern([0.5, 0.5], 0);
+        doc.line(summaryLeft - 2, yPos + 11, rightAlign, yPos + 11);
+        doc.setLineDashPattern([], 0);
+
+        // TOTAL
+        yPos += 18;
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(blackColor[0], blackColor[1], blackColor[2]);
+        doc.text('Total a Pagar:', summaryLeft, yPos);
+
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text(`$${total.toFixed(2)} MXN`, rightAlign, yPos, { align: 'right' });
+        yPos += 15;
+
+        // --- 5. PIE DE PÁGINA ---
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+        doc.text('Presenta este código al momento de tu check-in. ¡Gracias por tu preferencia!', 105, pageHeight - 15, { align: 'center' });
+        doc.text('Hotel Oasis | Recibo de Confirmación', 105, pageHeight - 10, { align: 'center' });
+
+        // --- GUARDAR ---
+        doc.save(`Reserva-HotelOasis-${reserva.codigo_reserva}.pdf`);
+    }
+
+
 });

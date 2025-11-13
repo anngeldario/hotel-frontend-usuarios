@@ -42,6 +42,12 @@
             display: block;
         }
     </style>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 </head>
 
 <body class="bg-background-light">
@@ -199,5 +205,91 @@
 
     <script src="perfil.js"></script>
 </body>
+
+<div id="recibo-modal-backdrop"
+    class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+
+    <div class="w-full max-w-lg mx-auto relative">
+
+        <button id="close-modal-btn"
+            class="absolute -top-3 -right-3 w-10 h-10 bg-white rounded-full text-red-500 shadow-lg z-10 flex items-center justify-center">
+            <span class="material-icons">close</span>
+        </button>
+
+        <div class="bg-card-light dark:bg-slate-800 shadow-xl rounded-2xl overflow-hidden relative">
+            <div class="perforated-edge">
+                <div id="modal-ticket-content">
+                    <div class="p-6 sm:p-8">
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+                            <div>
+                                <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Código de Reserva
+                                </h2>
+                                <p class="font-mono text-primary font-bold text-lg tracking-wider"
+                                    id="modal-ticket-codigo-reserva">Cargando...</p>
+                            </div>
+                            <div class="w-24 h-24 p-2 bg-white dark:bg-slate-700 rounded-lg shadow-sm">
+                                <img id="modal-ticket-qr-code" alt="QR code" class="w-full h-full object-contain"
+                                    src="httpsa://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Cargando..." />
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Cliente</span>
+                                <span class="font-medium text-slate-900 dark:text-white text-right"
+                                    id="modal-ticket-cliente-nombre">Cargando...</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Habitación</span>
+                                <span class="font-medium text-slate-900 dark:text-white text-right"
+                                    id="modal-ticket-habitacion-info">Cargando...</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                <div class="flex flex-col">
+                                    <span class="text-slate-500 dark:text-slate-400 text-sm">Check-in</span>
+                                    <span class="font-medium text-slate-900 dark:text-white"
+                                        id="modal-ticket-checkin">--/--/----</span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-slate-500 dark:text-slate-400 text-sm">Check-out</span>
+                                    <span class="font-medium text-slate-900 dark:text-white"
+                                        id="modal-ticket-checkout">--/--/----</span>
+                                </div>
+                                <div class="flex flex-col col-span-2 sm:col-span-1 sm:text-right">
+                                    <span class="text-slate-500 dark:text-slate-400 text-sm">Huéspedes</span>
+                                    <span class="font-medium text-slate-900 dark:text-white"
+                                        id="modal-ticket-huespedes">Cargando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t-2 border-dashed border-slate-300 dark:border-slate-600 mx-6 sm:mx-8"></div>
+                    <div class="p-6 sm:p-8">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                                <span>Costo por noche</span>
+                                <span id="modal-ticket-calculo-precio">Cargando...</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-xl font-bold text-slate-900 dark:text-white">
+                                <span>Total a Pagar:</span>
+                                <span class="text-primary" id="modal-ticket-total-pagar">$0.00 MXN</span>
+                            </div>
+                        </div>
+                        <p class="mt-6 text-sm text-center text-slate-500 dark:text-slate-400">Presenta este código al
+                            momento de tu check-in. ¡Gracias por tu preferencia!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 flex gap-4 justify-center">
+            <a id="modal-descargar-pdf-btn"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-primary-dark transition-all"
+                href="#">
+                <span class="material-symbols-outlined"></span>
+                Descargar Recibo
+            </a>
+        </div>
+    </div>
+</div>
 
 </html>
