@@ -1,6 +1,4 @@
 
-// --- ¡NUEVO BLOQUE! ESTO SE EJECUTA INMEDIATAMENTE ---
-
 // 1. Revisa si hay un token en la URL (del login social)
 const params = new URLSearchParams(window.location.search);
 const tokenFromUrl = params.get('token');
@@ -9,14 +7,15 @@ if (tokenFromUrl) {
     // 2. Si hay un token, guárdalo en localStorage
     localStorage.setItem('authToken', tokenFromUrl);
 
-    // 3. Limpia la URL para que el token no se vea (opcional pero recomendado)
-    window.history.replaceState(null, '', window.location.pathname);
+    // 3. Limpia la URL de forma segura (¡CORRECCIÓN AQUÍ!)
+    // Construimos la URL limpia manualmente para evitar errores de seguridad
+    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
 }
-// --- FIN DEL NUEVO BLOQUE ---
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const token = localStorage.getItem('authToken');
     if (!token) {
         window.location.href = 'login-cliente.html';
@@ -222,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    
+
 
     // --- LÓGICA DEL MODAL DE RECIBO ---
 
