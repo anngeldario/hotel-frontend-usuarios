@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- REFERENCIAS A TODOS LOS ELEMENTOS DEL DOM ---
     const userSessionContainer = document.getElementById('user-session');
-    const profilePicEl = document.getElementById('profile-pic');
+    const profileAvatarEl = document.getElementById('profile-avatar');
     const profileNameSidebarEl = document.getElementById('profile-name-sidebar');
     const reservationsContainer = document.getElementById('reservations-container');
     const menuTabs = document.getElementById('profile-menu-tabs');
@@ -68,11 +68,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CARGAR DATOS DEL USUARIO ---
     const userData = parseJwt(token);
+    // --- CARGAR DATOS DEL USUARIO (BLOQUE COMPLETO CORREGIDO) ---
     if (userData) {
         const userName = userData.nombre.toUpperCase();
+        // NUEVO: Obtenemos el apellido para calcular el color único
+        const userLastname = userData.apellido ? userData.apellido.toUpperCase() : '';
+
+        // 1. Ponemos el nombre en la barra lateral
         profileNameSidebarEl.textContent = userName;
 
-        // Rellenar menú de la cabecera
+        // --- NUEVO: Lógica del Avatar de colores ---
+        if (profileAvatarEl) {
+            // A. Ponemos la inicial
+            const inicial = userName.charAt(0);
+            profileAvatarEl.textContent = inicial;
+
+            // B. Ponemos el color de fondo dinámico
+            const colorFondo = obtenerColorPorNombre(userName + userLastname);
+            profileAvatarEl.style.backgroundColor = colorFondo;
+        }
+
+        // --- LO QUE YA TENÍAS: Rellenar menú de la cabecera ---
         userSessionContainer.innerHTML = `
             <button class="flex items-center space-x-2 bg-gray-100 px-4 py-2 rounded-full">
                 <span class="font-semibold text-sm">${userName}</span>
@@ -80,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
         `;
 
-        // Rellenar los campos del formulario de edición con los datos actuales
+        // --- LO QUE YA TENÍAS: Rellenar los campos del formulario ---
         editNombreInput.value = userData.nombre;
         editApellidoInput.value = userData.apellido;
         editEmailInput.value = userData.email;
@@ -445,5 +461,31 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.save(`Reserva-HotelOasis-${reserva.codigo_reserva}.pdf`);
     }
 
+    // --- Función para obtener un color bonito basado en el nombre ---
+    function obtenerColorPorNombre(nombre) {
+        // Una paleta de colores modernos y legibles (Tailwind colors)
+        const colores = [
+            '#ef4444', // Rojo
+            '#f97316', // Naranja
+            '#f59e0b', // Ámbar
+            '#10b981', // Esmeralda
+            '#06b6d4', // Cian
+            '#3b82f6', // Azul
+            '#6366f1', // Índigo
+            '#8b5cf6', // Violeta
+            '#d946ef', // Fucsia
+            '#f43f5e'  // Rosa
+        ];
+
+        // Sumamos los códigos de cada letra para obtener un número único
+        let hash = 0;
+        for (let i = 0; i < nombre.length; i++) {
+            hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        // Usamos el número para elegir un color de la lista (siempre el mismo para el mismo nombre)
+        const index = Math.abs(hash) % colores.length;
+        return colores[index];
+    }
 
 });
